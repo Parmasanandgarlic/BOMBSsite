@@ -30,7 +30,7 @@ export function Lookbook() {
           <div className="relative w-full aspect-[4/3] border-4 border-white shadow-[6px_6px_0px_rgba(255,255,255,1)]">
             {!img1Loaded && <div className="absolute inset-0 img-skeleton" />}
             <img
-              src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?q=80&w=2000&auto=format&fit=crop"
+              src="https://image.pollinations.ai/prompt/black_and_white_ink_drawing_comic_book_style_post_apocalyptic_wasteland_ruins_doom_scenario?width=2000&height=1500&nologo=true"
               alt="Brutalist concrete architecture inspiration"
               className={`w-full h-full object-cover grayscale contrast-125 transition-opacity duration-300 ${img1Loaded ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"
@@ -74,7 +74,7 @@ export function Lookbook() {
           >
             {!img1Loaded && <div className="absolute inset-0 img-skeleton" />}
             <img
-              src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?q=80&w=2000&auto=format&fit=crop"
+              src="https://image.pollinations.ai/prompt/black_and_white_ink_drawing_comic_book_style_post_apocalyptic_wasteland_ruins_doom_scenario?width=2000&height=1500&nologo=true"
               alt="Brutalist concrete architecture inspiration"
               className={`w-full h-full object-cover grayscale contrast-125 transition-opacity duration-300 ${img1Loaded ? 'opacity-100' : 'opacity-0'}`}
               loading="lazy"

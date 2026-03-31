@@ -7,7 +7,7 @@ export function Hero() {
       <div className="absolute inset-0 z-0 p-4 md:p-12 pt-24 md:pt-32 pb-12">
         <div className="relative w-full h-full overflow-hidden border-4 border-white">
           <img
-            src="https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1518640467707-6811f4a6ab73?q=80&w=2000&auto=format&fit=crop"
             alt="Urban brutalist streetwear aesthetic"
             className="w-full h-full object-cover grayscale contrast-125 brightness-50"
           />
