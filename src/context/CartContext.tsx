@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface Product {
   id: string;
@@ -26,11 +26,39 @@ interface CartContextType {
   cartCount: number;
 }
 
+const CART_STORAGE_KEY = 'bombs-cart';
+
+function loadCartFromStorage(): CartItem[] {
+  try {
+    const stored = localStorage.getItem(CART_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    // Corrupted storage — start fresh
+  }
+  return [];
+}
+
+function saveCartToStorage(items: CartItem[]) {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+  } catch {
+    // Storage full or unavailable — fail silently
+  }
+}
+
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(loadCartFromStorage);
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // Persist to localStorage on every change
+  useEffect(() => {
+    saveCartToStorage(items);
+  }, [items]);
 
   const addItem = (product: Product, size?: string) => {
     setItems((prev) => {

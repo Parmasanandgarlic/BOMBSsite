@@ -1,10 +1,20 @@
-import { useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useState } from 'react';
 import { Instagram, Twitter, Mail } from 'lucide-react';
 import { ShippingReturnsModal } from './ShippingReturnsModal';
 
 export function Footer() {
   const [isShippingModalOpen, setIsShippingModalOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    // In production, send to an API / Mailchimp / Cloud Function
+    setSubscribed(true);
+    setEmail('');
+    setTimeout(() => setSubscribed(false), 4000);
+  };
 
   return (
     <footer className="bg-white text-black pt-24 pb-0 border-t-4 border-black relative overflow-hidden">
@@ -19,12 +29,15 @@ export function Footer() {
             <p className="text-sm text-gray-600 uppercase tracking-widest mb-8 max-w-sm font-bold">
               Sign up for early access to drops, classified intel, and more.
             </p>
-            <form className="flex border-b-4 border-black pb-2 max-w-md">
+            <form className="flex border-b-4 border-black pb-2 max-w-md" onSubmit={handleSubscribe}>
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="EMAIL ADDRESS"
                 className="bg-transparent w-full outline-none text-sm uppercase tracking-widest placeholder:text-gray-500 font-bold"
                 required
+                aria-label="Email address for newsletter"
               />
               <button
                 type="submit"
@@ -33,6 +46,11 @@ export function Footer() {
                 Submit
               </button>
             </form>
+            {subscribed && (
+              <p className="mt-3 text-sm font-bold uppercase tracking-widest text-green-700 toast-enter">
+                ✓ You're in. Welcome to the Syndicate.
+              </p>
+            )}
           </div>
         </div>
 
@@ -40,30 +58,43 @@ export function Footer() {
         <div className="md:col-span-4 grid grid-cols-2 gap-0 border-b-4 md:border-b-0 md:border-r-4 border-black">
           <div className="flex flex-col space-y-4 text-xs font-black uppercase tracking-widest text-black p-8 border-r-4 border-black">
             <h4 className="text-black mb-2 underline decoration-2 underline-offset-4">Shop</h4>
-            <a href="#" className="hover:text-gray-500 transition-colors">All Products</a>
-            <a href="#" className="hover:text-gray-500 transition-colors">New Arrivals</a>
-            <a href="#" className="hover:text-gray-500 transition-colors">Best Sellers</a>
-            <a href="#" className="hover:text-gray-500 transition-colors">Accessories</a>
+            <a href="#shop" className="hover:text-gray-500 transition-colors">All Products</a>
+            <a href="#shop" className="hover:text-gray-500 transition-colors">New Arrivals</a>
           </div>
           <div className="flex flex-col space-y-4 text-xs font-black uppercase tracking-widest text-black p-8">
             <h4 className="text-black mb-2 underline decoration-2 underline-offset-4">Support</h4>
-            <a href="#" className="hover:text-gray-500 transition-colors">FAQ</a>
             <button onClick={() => setIsShippingModalOpen(true)} className="text-left hover:text-gray-500 transition-colors">Shipping</button>
             <button onClick={() => setIsShippingModalOpen(true)} className="text-left hover:text-gray-500 transition-colors">Returns</button>
-            <a href="#" className="hover:text-gray-500 transition-colors">Contact</a>
+            <a href="mailto:support@bombsbrand.com" className="hover:text-gray-500 transition-colors">Contact</a>
           </div>
         </div>
 
         {/* Socials & Info */}
         <div className="md:col-span-3 flex flex-col justify-between items-start p-8">
           <div className="flex space-x-6 mb-12 md:mb-0">
-            <a href="#" className="hover:text-gray-500 transition-colors">
+            <a
+              href="https://instagram.com/bombsbrand"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gray-500 transition-colors"
+              aria-label="Follow us on Instagram"
+            >
               <Instagram size={32} strokeWidth={2.5} />
             </a>
-            <a href="https://x.com/bombsbrand" target="_blank" rel="noopener noreferrer" className="hover:text-gray-500 transition-colors">
+            <a
+              href="https://x.com/bombsbrand"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-gray-500 transition-colors"
+              aria-label="Follow us on X (Twitter)"
+            >
               <Twitter size={32} strokeWidth={2.5} />
             </a>
-            <a href="#" className="hover:text-gray-500 transition-colors">
+            <a
+              href="mailto:hello@bombsbrand.com"
+              className="hover:text-gray-500 transition-colors"
+              aria-label="Email us"
+            >
               <Mail size={32} strokeWidth={2.5} />
             </a>
           </div>

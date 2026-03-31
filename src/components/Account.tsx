@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User as UserIcon, LogOut, Package, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -30,6 +30,8 @@ export function Account({ isOpen, onClose }: AccountProps) {
   const [authError, setAuthError] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
+  const drawerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     if (userProfile?.shippingData) {
       setFormData(userProfile.shippingData);
@@ -54,6 +56,51 @@ export function Account({ isOpen, onClose }: AccountProps) {
       setPasswordError('');
     }
   }, [password]);
+
+  // Escape key + focus trap
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
 
   const validateShippingField = (name: string, value: string) => {
     let error = '';
@@ -90,9 +137,8 @@ export function Account({ isOpen, onClose }: AccountProps) {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate all fields before saving
     let isValid = true;
-    Object.entries(formData).forEach(([key, value]) => {
+    (Object.entries(formData) as [string, string][]).forEach(([key, value]) => {
       if (!validateShippingField(key, value)) {
         isValid = false;
       }
@@ -104,8 +150,8 @@ export function Account({ isOpen, onClose }: AccountProps) {
     try {
       await updateShippingData(formData);
       setIsEditing(false);
-    } catch (error) {
-      console.error("Failed to save shipping data", error);
+    } catch (err) {
+      console.error("Failed to save shipping data", err instanceof Error ? err.message : err);
     } finally {
       setIsSaving(false);
     }
@@ -126,15 +172,19 @@ export function Account({ isOpen, onClose }: AccountProps) {
       } else {
         await signupWithEmail(email, password);
       }
-    } catch (error: any) {
-      setAuthError(error.message || "Authentication failed");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setAuthError(err.message);
+      } else {
+        setAuthError('Authentication failed. Please try again.');
+      }
     } finally {
       setIsAuthenticating(false);
     }
   };
 
   const isAuthFormValid = email && password && !emailError && !passwordError;
-  const isShippingFormValid = Object.values(shippingErrors).every(err => err === '') && Object.values(formData).every(val => val.trim() !== '');
+  const isShippingFormValid = Object.values(shippingErrors).every(err => err === '') && (Object.values(formData) as string[]).every(val => val.trim() !== '');
 
   return (
     <AnimatePresence>
@@ -145,21 +195,26 @@ export function Account({ isOpen, onClose }: AccountProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/50 z-[60] backdrop-blur-sm"
+            aria-hidden="true"
           />
           <motion.div
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Account panel"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-white z-50 shadow-2xl border-l-4 border-black flex flex-col"
+            className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-white z-[70] shadow-2xl border-l-4 border-black flex flex-col"
           >
             <div className="p-6 border-b-4 border-black flex justify-between items-center bg-black text-white">
               <h2 className="text-2xl font-black italic uppercase tracking-widest flex items-center gap-2">
                 <UserIcon size={24} />
                 Syndicate ID
               </h2>
-              <button onClick={onClose} className="hover:text-gray-300 transition-colors">
+              <button onClick={onClose} className="hover:text-gray-300 transition-colors" aria-label="Close account panel">
                 <X size={28} />
               </button>
             </div>
@@ -185,8 +240,9 @@ export function Account({ isOpen, onClose }: AccountProps) {
                       </div>
                     )}
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest mb-1">Email</label>
+                      <label htmlFor="auth-email" className="block text-xs font-bold uppercase tracking-widest mb-1">Email</label>
                       <input
+                        id="auth-email"
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -200,8 +256,9 @@ export function Account({ isOpen, onClose }: AccountProps) {
                       )}
                     </div>
                     <div>
-                      <label className="block text-xs font-bold uppercase tracking-widest mb-1">Password</label>
+                      <label htmlFor="auth-password" className="block text-xs font-bold uppercase tracking-widest mb-1">Password</label>
                       <input
+                        id="auth-password"
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -247,10 +304,6 @@ export function Account({ isOpen, onClose }: AccountProps) {
                   >
                     {isLoginMode ? "Need an account? Sign up" : "Already have an account? Sign in"}
                   </button>
-                  
-                  <p className="text-xs text-gray-400 mt-4">
-                    Note: Email/Password sign-up requires manual activation in the Firebase Console under Authentication &gt; Sign-in method.
-                  </p>
                 </div>
               ) : (
                 <div className="space-y-8">
@@ -275,8 +328,9 @@ export function Account({ isOpen, onClose }: AccountProps) {
                     {isEditing ? (
                       <form onSubmit={handleSave} className="space-y-4">
                         <div>
-                          <label className="block text-xs font-bold uppercase tracking-widest mb-1">Full Name</label>
+                          <label htmlFor="ship-fullName" className="block text-xs font-bold uppercase tracking-widest mb-1">Full Name</label>
                           <input
+                            id="ship-fullName"
                             type="text"
                             name="fullName"
                             value={formData.fullName}
@@ -291,8 +345,9 @@ export function Account({ isOpen, onClose }: AccountProps) {
                           )}
                         </div>
                         <div>
-                          <label className="block text-xs font-bold uppercase tracking-widest mb-1">Address</label>
+                          <label htmlFor="ship-address" className="block text-xs font-bold uppercase tracking-widest mb-1">Address</label>
                           <input
+                            id="ship-address"
                             type="text"
                             name="address"
                             value={formData.address}
@@ -308,8 +363,9 @@ export function Account({ isOpen, onClose }: AccountProps) {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">City</label>
+                            <label htmlFor="ship-city" className="block text-xs font-bold uppercase tracking-widest mb-1">City</label>
                             <input
+                              id="ship-city"
                               type="text"
                               name="city"
                               value={formData.city}
@@ -324,8 +380,9 @@ export function Account({ isOpen, onClose }: AccountProps) {
                             )}
                           </div>
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">State</label>
+                            <label htmlFor="ship-state" className="block text-xs font-bold uppercase tracking-widest mb-1">State</label>
                             <input
+                              id="ship-state"
                               type="text"
                               name="state"
                               value={formData.state}
@@ -342,8 +399,9 @@ export function Account({ isOpen, onClose }: AccountProps) {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">ZIP</label>
+                            <label htmlFor="ship-zip" className="block text-xs font-bold uppercase tracking-widest mb-1">ZIP</label>
                             <input
+                              id="ship-zip"
                               type="text"
                               name="zip"
                               value={formData.zip}
@@ -358,8 +416,9 @@ export function Account({ isOpen, onClose }: AccountProps) {
                             )}
                           </div>
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-widest mb-1">Country</label>
+                            <label htmlFor="ship-country" className="block text-xs font-bold uppercase tracking-widest mb-1">Country</label>
                             <input
+                              id="ship-country"
                               type="text"
                               name="country"
                               value={formData.country}

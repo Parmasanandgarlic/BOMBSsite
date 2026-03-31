@@ -1,9 +1,67 @@
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
-export function Cart() {
+interface CartProps {
+  onAccountOpen?: () => void;
+}
+
+export function Cart({ onAccountOpen }: CartProps) {
   const { isCartOpen, setIsCartOpen, items, updateQuantity, removeItem, cartTotal } = useCart();
+  const [checkoutToast, setCheckoutToast] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+
+  // Escape key to close
+  useEffect(() => {
+    if (!isCartOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsCartOpen(false);
+        return;
+      }
+
+      // Focus trap
+      if (e.key === 'Tab' && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last?.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first?.focus();
+          }
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isCartOpen, setIsCartOpen]);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isCartOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isCartOpen]);
+
+  const handleCheckout = () => {
+    setCheckoutToast(true);
+    setTimeout(() => setCheckoutToast(false), 3000);
+  };
 
   return (
     <AnimatePresence>
@@ -16,10 +74,15 @@ export function Cart() {
             exit={{ opacity: 0 }}
             onClick={() => setIsCartOpen(false)}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
+            aria-hidden="true"
           />
 
           {/* Cart Drawer */}
           <motion.div
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Shopping cart"
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
@@ -35,6 +98,7 @@ export function Cart() {
               <button
                 onClick={() => setIsCartOpen(false)}
                 className="hover:text-gray-500 transition-colors"
+                aria-label="Close cart"
               >
                 <X size={24} />
               </button>
@@ -76,6 +140,7 @@ export function Cart() {
                             <button
                               onClick={() => removeItem(item.id, item.size)}
                               className="text-gray-400 hover:text-black transition-colors"
+                              aria-label={`Remove ${item.name} from cart`}
                             >
                               <X size={16} />
                             </button>
@@ -91,15 +156,17 @@ export function Cart() {
                           <button
                             onClick={() => updateQuantity(item.id, item.size, item.quantity - 1)}
                             className="p-2 hover:bg-gray-100 transition-colors"
+                            aria-label={`Decrease quantity of ${item.name}`}
                           >
                             <Minus size={14} />
                           </button>
-                          <span className="w-8 text-center text-sm font-medium">
+                          <span className="w-8 text-center text-sm font-medium" aria-label={`Quantity: ${item.quantity}`}>
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}
                             className="p-2 hover:bg-gray-100 transition-colors"
+                            aria-label={`Increase quantity of ${item.name}`}
                           >
                             <Plus size={14} />
                           </button>
@@ -121,8 +188,15 @@ export function Cart() {
                 <p className="text-xs text-gray-500 mb-6 uppercase tracking-widest text-center">
                   Shipping & taxes calculated at checkout
                 </p>
-                <button className="w-full bg-black text-white py-4 font-black italic uppercase tracking-widest hover:bg-white hover:text-black border-4 border-black transition-colors">
-                  Checkout
+                <button
+                  onClick={handleCheckout}
+                  className={`w-full py-4 font-black italic uppercase tracking-widest border-4 border-black transition-colors ${
+                    checkoutToast
+                      ? 'bg-gray-800 text-gray-300 cursor-default'
+                      : 'bg-black text-white hover:bg-white hover:text-black'
+                  }`}
+                >
+                  {checkoutToast ? 'Coming Soon — Stay Tuned' : 'Checkout'}
                 </button>
               </div>
             )}
