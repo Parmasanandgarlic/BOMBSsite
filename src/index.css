@@ -21,7 +21,7 @@
 }
 
 /* Worn analog photography effect on all imagery */
-img {
+img:not(.grayscale) {
   filter: sepia(25%) contrast(110%) brightness(90%) hue-rotate(-10deg);
 }
 

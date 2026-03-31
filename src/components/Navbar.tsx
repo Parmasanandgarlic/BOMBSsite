@@ -96,8 +96,14 @@ export function Navbar({ isAccountOpen, setIsAccountOpen }: NavbarProps) {
 
           {/* Logo */}
           <div className="absolute left-1/2 transform -translate-x-1/2">
-            <a href="#" className="box-logo text-3xl m-1" aria-label="BOMBS Home">
-              B.O.M.B.S
+            <a href="#" className="relative flex justify-center items-center group" aria-label="BOMBS Home">
+              <span className="font-sans font-black italic text-5xl md:text-6xl uppercase tracking-tighter leading-none whitespace-nowrap text-outline group-hover:text-black transition-colors duration-300">
+                BOMBS
+              </span>
+              {/* Hand-drawn scribble over the text */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl md:text-3xl font-hand text-black z-10 rotate-[-15deg] opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+                Worldwide
+              </div>
             </a>
           </div>
 
@@ -151,7 +157,14 @@ export function Navbar({ isAccountOpen, setIsAccountOpen }: NavbarProps) {
             aria-label="Navigation menu"
           >
             <div className="flex justify-between items-center mb-12">
-              <span className="box-logo text-3xl m-1">B.O.M.B.S</span>
+              <div className="relative flex justify-center items-center select-none">
+                <span className="font-sans font-black italic text-4xl uppercase tracking-tighter leading-none whitespace-nowrap text-outline">
+                  BOMBS
+                </span>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl font-hand text-black z-10 rotate-[-15deg] pointer-events-none">
+                  Worldwide
+                </div>
+              </div>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}
                 aria-label="Close navigation menu"
